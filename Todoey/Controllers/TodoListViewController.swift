@@ -9,50 +9,52 @@
 import UIKit
 
 class TodoListViewController: UITableViewController {
-
-//    var itemArray = ["Eleven", "Twelve", "Thirteen"]
-
-    var itemArray = [Item]()
     
-    let userDefaults = UserDefaults.standard
+//  var itemArray = ["Eleven", "Twelve", "Thirteen"]
+
+    var itemArray = [Item]() // Pay attention to this. itemArray is an array of Item objects. You can create an empty array of a certain type using the following initializer syntax − var someArray = [SomeType](). Seems to also work with '[Item()]' in place of '[Item]()' -> Needs confirmation
+
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+
+//  let userDefaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-//        if let items = userDefaults.array(forKey: "TodoListArray") as? [String] {
-//            itemArray = items
-//        }
+//      if let items = userDefaults.array(forKey: "TodoListArray") as? [String] {itemArray = items}
         
-        let newItem0 = Item()
-        newItem0.itemTitle = "Eleven"
-        newItem0.isDone = false
-        itemArray.append(newItem0)
+//        let newItem0 = Item()
+//        newItem0.itemTitle = "Eleven"
+//        newItem0.isDone = false
+//        itemArray.append(newItem0)
+//
+//        let newItem1 = Item()
+//        newItem1.itemTitle = "Twelve"
+//        newItem1.isDone = false
+//        itemArray.append(newItem1)
+//
+//        let newItem2 = Item()
+//        newItem2.itemTitle = "Thirteen"
+//        newItem2.isDone = false
+//        itemArray.append(newItem2)
+//
+//        let newItem3 = Item()
+//        newItem3.itemTitle = "First"
+//        newItem3.isDone = false
+//        itemArray.append(newItem3)
+//
+//        let newItem4 = Item()
+//        newItem4.itemTitle = "Seventh"
+//        newItem4.isDone = false
+//        itemArray.append(newItem4)
+//
+//        let newItem5 = Item()
+//        newItem5.itemTitle = "Eight"
+//        newItem5.isDone = false
+//        itemArray.append(newItem5)
         
-        let newItem1 = Item()
-        newItem1.itemTitle = "Twelve"
-        newItem1.isDone = false
-        itemArray.append(newItem1)
-        
-        let newItem2 = Item()
-        newItem2.itemTitle = "Thirteen"
-        newItem2.isDone = false
-        itemArray.append(newItem2)
-        
-        let newItem3 = Item()
-        newItem3.itemTitle = "First"
-        newItem3.isDone = false
-        itemArray.append(newItem3)
-        
-        let newItem4 = Item()
-        newItem4.itemTitle = "Seventh"
-        newItem4.isDone = false
-        itemArray.append(newItem4)
-        
-        let newItem5 = Item()
-        newItem5.itemTitle = "Eight"
-        newItem5.isDone = false
-        itemArray.append(newItem5)
+        loadItems()
     }
     
     
@@ -70,7 +72,7 @@ class TodoListViewController: UITableViewController {
 
 //      if itemArray[indexPath.row].isDone == true {cell.accessoryType = .checkmark} else {cell.accessoryType = .none} // This code is refactored below
         
-//      Ternary operator:
+//      Refactor 1 using the Ternary operator:
 //      value = condition ? valueIfTrue : valueIfFalse
         
 //      cell.accessoryType = itemPopulating.isDone == true ? .checkmark : .none // This is further simplified into the following:
@@ -96,7 +98,7 @@ class TodoListViewController: UITableViewController {
         
         tableView.deselectRow(at: indexPath, animated: true)
         
-        tableView.reloadData()
+        saveItems()
     }
 
     //MARK - Add new items
@@ -112,13 +114,16 @@ class TodoListViewController: UITableViewController {
             // What should happen once the user clicks 'Add' in the UIAlert
             
             let newItem = Item()
-            newItem.itemTitle = itemTextField.text!
             
-            self.userDefaults.set(self.itemArray, forKey: "TodoListArray")
+            newItem.itemTitle = itemTextField.text!
             
             self.itemArray.append(newItem)
             
-            self.tableView.reloadData()
+            self.saveItems()
+            
+//          self.userDefaults.set(self.itemArray, forKey: "TodoListArray")
+            
+
         }
             
         addItemAlert.addTextField { (itemAlertTextField) in
@@ -134,5 +139,32 @@ class TodoListViewController: UITableViewController {
     }
     
     
+    func saveItems() {
+        let encoder = PropertyListEncoder()
+        
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)}
+        catch {
+            print("Error encoding item array: \(error)")
+        }
+        
+        self.tableView.reloadData()
+    }
+    
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!) { //result of the method is turned into an optional by try?
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding item array: \(error)")
+            }
+                
+        }
+    }
+    
+    
 }
+
 
